@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const navigatte = useNavigate();
+  const navigate = useNavigate();
   const [inputs, setInputs] = useState({
     email: "",
     password: "",
@@ -24,7 +24,7 @@ const AuthForm = () => {
       alert("Please fill all the fields!");
       return;
     }
-    navigatte("/");
+    navigate("/");
   };
 
   return (
