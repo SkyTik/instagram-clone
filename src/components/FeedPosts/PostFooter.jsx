@@ -14,7 +14,7 @@ import {
   UnlikeLogo,
 } from "../../assets/constants.jsx";
 
-const PostFooter = ({ username }) => {
+const PostFooter = ({ username, isProfilePage }) => {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
 
@@ -29,7 +29,7 @@ const PostFooter = ({ username }) => {
   };
 
   return (
-    <Box mb={10}>
+    <Box mb={10} mt={"auto"}>
       <Flex alignItems={"center"} gap={4} pt={0} mb={2} mt={4}>
         <Box onClick={handleLike} cursor={"pointer"} fontSize={18}>
           {!liked ? <NotificationsLogo /> : <UnlikeLogo />}
@@ -47,9 +47,15 @@ const PostFooter = ({ username }) => {
           feelings good
         </Text>
       </Text>
-      <Text color={"gray"} fontSize={"sm"}>
-        View all comments
-      </Text>
+      {!isProfilePage && (
+        <>
+          {" "}
+          <Text color={"gray"} fontSize={"sm"}>
+            View all comments
+          </Text>
+        </>
+      )}
+
       <Flex
         alignItems={"center"}
         gap={2}
