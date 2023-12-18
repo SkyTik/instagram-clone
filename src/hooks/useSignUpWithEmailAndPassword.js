@@ -1,7 +1,14 @@
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { auth, firestore } from "../firebase/firebase.js";
 
-import { setDoc, doc } from "firebase/firestore";
+import {
+  setDoc,
+  doc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import useShowToast from "./useShowToast.js";
 import useAuthStore from "../store/authStore.js";
 
@@ -22,6 +29,16 @@ const UseSignUpWithEmailAndPassword = () => {
       showToast("ERROR", "Missing required fields!", "error");
       return;
     }
+
+    // Check duplicate username
+    const usersRef = collection(firestore, "users");
+    const q = query(usersRef, where("username", "==", inputs.username));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      showToast("ERROR", "username is existed!", "error");
+      return;
+    }
+
     try {
       const newUser = await createUserWithEmailAndPassword(
         inputs.email,
