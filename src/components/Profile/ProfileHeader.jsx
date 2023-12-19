@@ -4,10 +4,25 @@ import {
   Button,
   Flex,
   Text,
+  useDisclosure,
   VStack,
 } from "@chakra-ui/react";
+import useUserProfileStore from "../../store/userProfileStore.js";
+import useAuthStore from "../../store/authStore.js";
+import EditProfile from "./EditProfile.jsx";
 
 const ProfileHeader = () => {
+  const { userProfile } = useUserProfileStore();
+
+  const { user: authUser } = useAuthStore();
+
+  const visitOwnProfile =
+    authUser && authUser.username === userProfile.username;
+  const visitAnotherProfile =
+    authUser && authUser.username !== userProfile.username;
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   return (
     <Flex
       gap={{ base: 4, sm: 10 }}
@@ -21,11 +36,9 @@ const ProfileHeader = () => {
         mx={"auto"}
       >
         <Avatar
-          name={"SkyTik"}
-          src={
-            "https://scontent-hkg1-1.xx.fbcdn.net/v/t39.30808-6/357694104_6666355803486879_2479394999745201163_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=efb6e6&_nc_eui2=AeHlKiUYi_uB8BqylQZEgpI4Sqnu3wx29xxKqe7fDHb3HHijt1wci27F3LVRkcrGGl00ef1MzdOMw0v0oD6qTP2z&_nc_ohc=RBBLDXqSzLEAX90borc&_nc_ht=scontent-hkg1-1.xx&oh=00_AfBjtzuZwH1bJGJmofbsMkqok4cnEy3CXhLi2xRtZVmUUQ&oe=657F4A03"
-          }
-          alt={"SkyTik"}
+          name={userProfile.username}
+          src={userProfile.profilePicURL}
+          alt={userProfile.username}
         />
       </AvatarGroup>
       <VStack alignItems={"start"} gap={2} mx={"auto"} flex={1}>
@@ -36,50 +49,68 @@ const ProfileHeader = () => {
           alignItems={"center"}
           w={"full"}
         >
-          <Text fontSize={{ base: "sm", md: "lg" }}>SkyTik_</Text>
-
-          <Flex gap={4} alignItems={"center"} justifyContent={"center"}>
-            <Button
-              bg={"white"}
-              color={"black"}
-              _hover={{ bg: "whiteAlpha.800" }}
-              size={{ base: "xs", md: "sm" }}
-            >
-              Edit profile
-            </Button>
-          </Flex>
+          <Text fontSize={{ base: "sm", md: "lg" }}>
+            {userProfile.username}
+          </Text>
+          {visitOwnProfile && (
+            <Flex gap={4} alignItems={"center"} justifyContent={"center"}>
+              <Button
+                bg={"white"}
+                color={"black"}
+                _hover={{ bg: "whiteAlpha.800" }}
+                size={{ base: "xs", md: "sm" }}
+                onClick={onOpen}
+              >
+                Edit profile
+              </Button>
+            </Flex>
+          )}
+          {visitAnotherProfile && (
+            <Flex gap={4} alignItems={"center"} justifyContent={"center"}>
+              <Button
+                bg={"blue.500"}
+                color={"white"}
+                _hover={{ bg: "blue.700" }}
+                size={{ base: "xs", md: "sm" }}
+              >
+                Follow
+              </Button>
+            </Flex>
+          )}
         </Flex>
         <Flex alignItems={"center"} gap={{ base: 2, sm: 4 }}>
           <Text fontSize={{ base: "xs", md: "sm" }}>
             <Text as={"span"} fontWeight={"bold"} mr={1}>
-              4
+              {userProfile.posts.length}
             </Text>
             Posts
           </Text>
 
           <Text fontSize={{ base: "xs", md: "sm" }}>
             <Text as={"span"} fontWeight={"bold"} mr={1}>
-              9999
+              {userProfile.followers.length}
             </Text>
             Followers
           </Text>
 
           <Text fontSize={{ base: "xs", md: "sm" }}>
             <Text as={"span"} fontWeight={"bold"} mr={1}>
-              9999
+              {userProfile.following.length}
             </Text>
             Followings
           </Text>
         </Flex>
         <Flex alignItems={"center"} gap={4}>
           <Text fontSize={{ base: "xs", md: "sm" }} fontWeight={"bold"}>
-            SkyTik
+            {userProfile.fullName}
           </Text>
         </Flex>
         <Flex alignItems={"center"} gap={4}>
-          <Text fontSize={{ base: "xs", md: "sm" }}>SkyTik is a developer</Text>
+          <Text fontSize={{ base: "xs", md: "sm" }}>{userProfile.bio}</Text>
         </Flex>
       </VStack>
+
+      {isOpen && <EditProfile isOpen={isOpen} onClose={onClose} />}
     </Flex>
   );
 };
