@@ -1,34 +1,50 @@
 import { Avatar, Box, Button, Flex, VStack } from "@chakra-ui/react";
-import { useState } from "react";
+import useFollowUser from "../../hooks/useFollowUser.js";
+import useAuthStore from "../../store/authStore.js";
 
-const SuggestedUser = ({ name, followers, avatar }) => {
-  const [isFollowed, setIsFollowed] = useState(false);
+const SuggestedUser = ({ user, setUser }) => {
+  const { isFollowing, isUpdating, handleFollowUser } = useFollowUser(user.uid);
+  const { user: authUser } = useAuthStore();
+
+  const onFollowUser = async () => {
+    await handleFollowUser();
+    setUser({
+      ...user,
+      followers: isFollowing
+        ? user.followers.filter((uid) => uid !== authUser.uid)
+        : [...user.followers, authUser.uid],
+    });
+  };
+
   return (
     <Flex justifyContent={"space-between"} alignItems={"center"} w={"full"}>
       <Flex alignItems={"center"} gap={2}>
-        <Avatar src={avatar} size={"md"} />
+        <Avatar src={user.profilePicURL} size={"md"} />
         <VStack spacing={2} alignItems={"flex-start"}>
           <Box fontSize={12} fontWeight={"bold"}>
-            {name}
+            {user.fullName}
           </Box>
           <Box fontSize={11} color={"gray.500"}>
-            {followers} followers
+            {user.followers.length} followers
           </Box>
         </VStack>
       </Flex>
-      <Button
-        fontSize={13}
-        bg={"transparent"}
-        p={0}
-        h={"max-content"}
-        fontWeight={"medium"}
-        color={"blue.400"}
-        cursor={"pointer"}
-        _hover={{ color: "white" }}
-        onClick={() => setIsFollowed(!isFollowed)}
-      >
-        {isFollowed ? "Unfollow" : "Follow"}
-      </Button>
+      {authUser.uid !== user.uid && (
+        <Button
+          fontSize={13}
+          bg={"transparent"}
+          p={0}
+          h={"max-content"}
+          fontWeight={"medium"}
+          color={"blue.400"}
+          cursor={"pointer"}
+          _hover={{ color: "white" }}
+          onClick={onFollowUser}
+          isLoading={isUpdating}
+        >
+          {isFollowing ? "Unfollow" : "Follow"}
+        </Button>
+      )}
     </Flex>
   );
 };
