@@ -15,8 +15,26 @@ import {
   ModalOverlay,
   Stack,
 } from "@chakra-ui/react";
+import { useRef, useState } from "react";
+import useEditProfile from "../../hooks/useEditProfile.js";
+import usePreviewImg from "../../hooks/usePreviewImg.js";
+import useAuthStore from "../../store/authStore.js";
 
 const EditProfile = ({ isOpen, onClose }) => {
+  const [inputs, setInputs] = useState({ username: "", fullName: "", bio: "" });
+  const { user } = useAuthStore();
+
+  const fileRef = useRef(null);
+
+  const { handleImageChange, setSelectedFile, selectedFile } = usePreviewImg();
+
+  const { isUpdating, editProfile } = useEditProfile();
+  const handleEditProfile = async () => {
+    await editProfile(inputs, selectedFile);
+    setSelectedFile(null);
+    onClose();
+  };
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -46,27 +64,60 @@ const EditProfile = ({ isOpen, onClose }) => {
                 <FormControl>
                   <Stack direction={["column", "row"]} spacing={6}>
                     <Center>
-                      <Avatar size="xl" src={""} border={"2px solid white "} />
+                      <Avatar
+                        size="xl"
+                        src={selectedFile || user.profilePicURL}
+                        border={"2px solid white "}
+                      />
                     </Center>
                     <Center w="full">
-                      <Button w="full">Edit Profile Picture</Button>
+                      <Button w="full" onClick={() => fileRef.current.click()}>
+                        Edit Profile Picture
+                      </Button>
                     </Center>
+                    <Input
+                      type={"file"}
+                      hidden
+                      ref={fileRef}
+                      onChange={handleImageChange}
+                    />
                   </Stack>
                 </FormControl>
 
                 <FormControl>
                   <FormLabel fontSize={"sm"}>Full Name</FormLabel>
-                  <Input placeholder={"Full Name"} size={"sm"} type={"text"} />
+                  <Input
+                    size={"sm"}
+                    type={"text"}
+                    value={inputs.fullName || user.fullName}
+                    onChange={(e) =>
+                      setInputs({ ...inputs, fullName: e.target.value })
+                    }
+                  />
                 </FormControl>
 
                 <FormControl>
                   <FormLabel fontSize={"sm"}>Username</FormLabel>
-                  <Input placeholder={"Username"} size={"sm"} type={"text"} />
+                  <Input
+                    size={"sm"}
+                    type={"text"}
+                    value={inputs.username || user.username}
+                    onChange={(e) =>
+                      setInputs({ ...inputs, username: e.target.value })
+                    }
+                  />
                 </FormControl>
 
                 <FormControl>
                   <FormLabel fontSize={"sm"}>Bio</FormLabel>
-                  <Input placeholder={"Bio"} size={"sm"} type={"text"} />
+                  <Input
+                    size={"sm"}
+                    type={"text"}
+                    value={inputs.bio || user.bio}
+                    onChange={(e) =>
+                      setInputs({ ...inputs, bio: e.target.value })
+                    }
+                  />
                 </FormControl>
 
                 <Stack spacing={6} direction={["column", "row"]}>
@@ -76,6 +127,7 @@ const EditProfile = ({ isOpen, onClose }) => {
                     w="full"
                     size="sm"
                     _hover={{ bg: "red.500" }}
+                    onClick={onClose}
                   >
                     Cancel
                   </Button>
@@ -85,6 +137,8 @@ const EditProfile = ({ isOpen, onClose }) => {
                     size="sm"
                     w="full"
                     _hover={{ bg: "blue.500" }}
+                    onClick={handleEditProfile}
+                    isLoading={isUpdating}
                   >
                     Submit
                   </Button>
