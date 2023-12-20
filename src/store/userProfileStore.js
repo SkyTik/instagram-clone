@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 const useUserProfileStore = create((set) => ({
-  useProfile: null,
+  userProfile: null,
   setUserProfile: (userProfile) => set({ userProfile }),
 }));
 export default useUserProfileStore;

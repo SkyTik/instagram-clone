@@ -7,21 +7,26 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
-import useUserProfileStore from "../../store/userProfileStore.js";
+import useFollowUser from "../../hooks/useFollowUser.js";
 import useAuthStore from "../../store/authStore.js";
+import useUserProfileStore from "../../store/userProfileStore.js";
 import EditProfile from "./EditProfile.jsx";
 
 const ProfileHeader = () => {
   const { userProfile } = useUserProfileStore();
+  console.log(userProfile);
 
   const { user: authUser } = useAuthStore();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const visitOwnProfile =
     authUser && authUser.username === userProfile.username;
   const visitAnotherProfile =
     authUser && authUser.username !== userProfile.username;
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isUpdating, isFollowing, handleFollowUser } = useFollowUser(
+    userProfile.uid,
+  );
 
   return (
     <Flex
@@ -72,8 +77,10 @@ const ProfileHeader = () => {
                 color={"white"}
                 _hover={{ bg: "blue.700" }}
                 size={{ base: "xs", md: "sm" }}
+                isLoading={isUpdating}
+                onClick={handleFollowUser}
               >
-                Follow
+                {isFollowing ? "Unfollow" : "Follow"}
               </Button>
             </Flex>
           )}
