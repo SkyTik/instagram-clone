@@ -1,6 +1,6 @@
 import {
   Avatar,
-  Box,
+  Button,
   Divider,
   Flex,
   GridItem,
@@ -14,14 +14,54 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
+import { arrayRemove, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { deleteObject, ref } from "firebase/storage";
+import { useState } from "react";
 import { AiFillHeart } from "react-icons/ai";
 import { FaComment } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import { firestore, storage } from "../../firebase/firebase.js";
+import useShowToast from "../../hooks/useShowToast.js";
+import useAuthStore from "../../store/authStore.js";
+import usePostStore from "../../store/postStore.js";
+import useUserProfileStore from "../../store/userProfileStore.js";
 import Comment from "../Comment/Comment.jsx";
 import PostFooter from "../FeedPosts/PostFooter.jsx";
 
-const ProfilePost = ({ img }) => {
+const ProfilePost = ({ post }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { userProfile, deletePost: deletePostInProfile } =
+    useUserProfileStore();
+  const { user: authUser } = useAuthStore();
+  const { deletePost } = usePostStore();
+  const showToast = useShowToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeletePost = async () => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+    if (isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+
+      const imgRef = ref(storage, `posts/${post.id}`);
+      await deleteObject(imgRef);
+
+      const userRef = doc(firestore, "users", authUser.uid);
+      await deleteDoc(doc(firestore, "posts", post.id));
+      await updateDoc(userRef, { posts: arrayRemove(post.id) });
+
+      deletePost(post.id);
+      deletePostInProfile(post.id);
+
+      showToast("SUCCESS", "Post is deleted!", "success");
+    } catch (e) {
+      showToast("ERROR", e.message, "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <>
       <GridItem
@@ -50,14 +90,14 @@ const ProfilePost = ({ img }) => {
             <Flex>
               <AiFillHeart size={20} />
               <Text fontWeight={"bold"} ml={2}>
-                7
+                {post.likes.length}
               </Text>
             </Flex>
             <Flex>
               <Flex>
                 <FaComment size={20} />
                 <Text fontWeight={"bold"} ml={2}>
-                  7
+                  {post.comments.length}
                 </Text>
               </Flex>
             </Flex>
@@ -65,7 +105,7 @@ const ProfilePost = ({ img }) => {
         </Flex>
 
         <Image
-          src={img}
+          src={post.imageURL}
           alt={"Profile's post"}
           w={"100%"}
           h={"100%"}
@@ -87,15 +127,19 @@ const ProfilePost = ({ img }) => {
               gap={4}
               w={{ base: "90%", sm: "70%", md: "full" }}
               mx={"auto"}
+              maxH={"90vh"}
+              minH={"50vh"}
             >
-              <Box
+              <Flex
                 borderRadius={4}
                 overflow={"hidden"}
                 border={"1px solid whiteAlpha.300"}
                 flex={1.5}
+                justifyContent={"center"}
+                alignItems={"center"}
               >
-                <Image src={img} alt={"Profile's post"} />
-              </Box>
+                <Image src={post.imageURL} alt={"Profile's post"} />
+              </Flex>
               <Flex
                 flex={1}
                 flexDir={"column"}
@@ -104,19 +148,25 @@ const ProfilePost = ({ img }) => {
               >
                 <Flex justifyContent={"space-between"} alignItems={"center"}>
                   <Flex alignItems={"center"} gap={4}>
-                    <Avatar src={"/profilepic.png"} size={"sm"} />
+                    <Avatar src={userProfile.profilePicURL} size={"sm"} />
                     <Text fontWeight={"bold"} fontSize={12}>
-                      SkyTik_
+                      {userProfile.fullName}
                     </Text>
                   </Flex>
 
-                  <Box
-                    _hover={{ bg: "whiteAlpha.300", color: "red.600" }}
-                    borderRadius={4}
-                    p={1}
-                  >
-                    <MdDelete size={20} cursor={"pointer"} />
-                  </Box>
+                  {authUser?.uid === userProfile.uid && (
+                    <Button
+                      size={"sm"}
+                      bg={"transparent"}
+                      _hover={{ bg: "whiteAlpha.300", color: "red.600" }}
+                      borderRadius={4}
+                      p={1}
+                      isLoading={isDeleting}
+                      onClick={handleDeletePost}
+                    >
+                      <MdDelete size={20} cursor={"pointer"} />
+                    </Button>
+                  )}
                 </Flex>
                 <Divider my={4} bg={"gray.500"} />
                 {/*Comments*/}
@@ -139,12 +189,6 @@ const ProfilePost = ({ img }) => {
                     username={"SkyTik"}
                     profilePicture={"/profilepic.png"}
                     text={"Hello"}
-                  />
-                  <Comment
-                    createdAt={"1 day ago"}
-                    username={"SkyTik"}
-                    profilePicture={"/profilepic.png"}
-                    text={"Niceee!"}
                   />
                 </VStack>
                 <Divider my={4} bg={"gray.800"} />
