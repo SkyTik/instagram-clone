@@ -25,12 +25,13 @@ import useShowToast from "../../hooks/useShowToast.js";
 import useAuthStore from "../../store/authStore.js";
 import usePostStore from "../../store/postStore.js";
 import useUserProfileStore from "../../store/userProfileStore.js";
+import Caption from "../Comment/Caption.jsx";
 import Comment from "../Comment/Comment.jsx";
 import PostFooter from "../FeedPosts/PostFooter.jsx";
 
 const ProfilePost = ({ post }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { userProfile, deletePost: deletePostInProfile } =
+  const { userProfile, deletePost: decrementPostsCount } =
     useUserProfileStore();
   const { user: authUser } = useAuthStore();
   const { deletePost } = usePostStore();
@@ -52,7 +53,7 @@ const ProfilePost = ({ post }) => {
       await updateDoc(userRef, { posts: arrayRemove(post.id) });
 
       deletePost(post.id);
-      deletePostInProfile(post.id);
+      decrementPostsCount(post.id);
 
       showToast("SUCCESS", "Post is deleted!", "success");
     } catch (e) {
@@ -176,23 +177,17 @@ const ProfilePost = ({ post }) => {
                   maxh={"350"}
                   overflowY={"auto"}
                 >
-                  <Comment
-                    createdAt={"1 day ago"}
-                    username={"SkyTik"}
-                    profilePicture={"/profilepic.png"}
-                    text={
-                      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. A adipisci assumenda autem dicta distinctio dolorem doloremque error facere hic, ipsam magni molestiae officiis quam quisquam quod quos reiciendis tempore voluptate!"
-                    }
-                  />
-                  <Comment
-                    createdAt={"1 day ago"}
-                    username={"SkyTik"}
-                    profilePicture={"/profilepic.png"}
-                    text={"Hello"}
-                  />
+                  {post?.caption && <Caption post={post} />}
+                  {post.comments.map((comment) => (
+                    <Comment comment={comment} key={comment.id} />
+                  ))}
                 </VStack>
                 <Divider my={4} bg={"gray.800"} />
-                <PostFooter username={"SkyTik"} isProfilePage={true} />
+                <PostFooter
+                  post={post}
+                  username={"SkyTik"}
+                  isProfilePage={true}
+                />
               </Flex>
             </Flex>
           </ModalBody>

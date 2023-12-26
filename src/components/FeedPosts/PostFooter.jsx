@@ -7,34 +7,42 @@ import {
   InputRightElement,
   Text,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   CommentLogo,
   NotificationsLogo,
   UnlikeLogo,
 } from "../../assets/constants.jsx";
+import useLikePost from "../../hooks/useLikePost.js";
+import usePostComment from "../../hooks/usePostComment.js";
+import useAuthStore from "../../store/authStore.js";
 
-const PostFooter = ({ username, isProfilePage }) => {
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(0);
+const PostFooter = ({ post, username, isProfilePage }) => {
+  const { isCommenting, handlePostComment } = usePostComment();
+  const [comment, setComment] = useState("");
+  const { user: authUser } = useAuthStore();
+  const commentRef = useRef(null);
+  const { isLiked, likes, handleLikePost } = useLikePost(post);
 
+  const handleSubmitComment = async () => {
+    await handlePostComment(post.id, comment);
+    setComment("");
+  };
   const handleLike = () => {
-    if (liked) {
-      setLiked(false);
-      setLikes(likes - 1);
-    } else {
-      setLiked(true);
-      setLikes(likes + 1);
-    }
+    handleLikePost();
   };
 
   return (
     <Box mb={10} mt={"auto"}>
       <Flex alignItems={"center"} gap={4} pt={0} mb={2} mt={4}>
         <Box onClick={handleLike} cursor={"pointer"} fontSize={18}>
-          {!liked ? <NotificationsLogo /> : <UnlikeLogo />}
+          {!isLiked ? <NotificationsLogo /> : <UnlikeLogo />}
         </Box>
-        <Box cursor={"pointer"} fontSize={18}>
+        <Box
+          cursor={"pointer"}
+          fontSize={18}
+          onClick={() => commentRef.current.focus()}
+        >
           <CommentLogo />
         </Box>
       </Flex>
@@ -56,32 +64,39 @@ const PostFooter = ({ username, isProfilePage }) => {
         </>
       )}
 
-      <Flex
-        alignItems={"center"}
-        gap={2}
-        justifyContent={"space-between"}
-        w={"full"}
-      >
-        <InputGroup>
-          <Input
-            variant={"flushed"}
-            placeholder={"Add a comment..."}
-            fontSize={14}
-          />
-          <InputRightElement>
-            <Button
+      {authUser && (
+        <Flex
+          alignItems={"center"}
+          gap={2}
+          justifyContent={"space-between"}
+          w={"full"}
+        >
+          <InputGroup>
+            <Input
+              variant={"flushed"}
+              placeholder={"Add a comment..."}
               fontSize={14}
-              color={"blue.500"}
-              fontWeight={600}
-              cursor={"pointer"}
-              _hover={{ color: "white" }}
-              bg={"transparent"}
-            >
-              Post
-            </Button>
-          </InputRightElement>
-        </InputGroup>
-      </Flex>
+              ref={commentRef}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+            <InputRightElement>
+              <Button
+                fontSize={14}
+                color={"blue.500"}
+                fontWeight={600}
+                cursor={"pointer"}
+                _hover={{ color: "white" }}
+                bg={"transparent"}
+                isLoading={isCommenting}
+                onClick={handleSubmitComment}
+              >
+                Post
+              </Button>
+            </InputRightElement>
+          </InputGroup>
+        </Flex>
+      )}
     </Box>
   );
 };
