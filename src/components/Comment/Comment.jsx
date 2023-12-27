@@ -8,7 +8,7 @@ const Comment = ({ comment }) => {
   if (isFetching) return <CommentSkeleton />;
 
   return (
-    <Flex gap={4} justifyContent={"center"} alignItems={"center"}>
+    <Flex gap={4}>
       <Link to={`/${userProfile.username}`}>
         <Avatar
           src={userProfile.profilePicURL}

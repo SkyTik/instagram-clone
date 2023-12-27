@@ -13,7 +13,7 @@ const useGetUserProfileById = (userId) => {
   useEffect(() => {
     const getUserProfile = async () => {
       setIsFetching(true);
-
+      setUserProfile(null);
       try {
         const userRef = await getDoc(doc(firestore, "users", userId));
         if (userRef.exists()) {
